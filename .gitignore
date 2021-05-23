@@ -1,2 +1,6 @@
 images/
 buttons/
+.vscode/
+__pycache__/
+icons/
+outputs/
