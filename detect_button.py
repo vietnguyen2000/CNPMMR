@@ -14,7 +14,7 @@ def detect_button(filePath):
     # Read image and resize
     img_path = filePath  # Input the path of the image
     img = cv2.imread(img_path)
-    
+    # img = reduceColor(img, 128)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     ratio = 1920 / img.shape[1]
     img = cv2.resize(img, (int(img.shape[1] * ratio), int(img.shape[0] * ratio)))  # Resize the image to (1920,)
@@ -32,7 +32,7 @@ def detect_button(filePath):
     # find Contours
     ret, thresh = cv2.threshold(img_edge, threshold1, threshold2, 0)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
+    # cv2.drawContours(img, contours, -1, (255, 0, 0), 1)
     overall_radius = []
 
     sd = ShapeDetector()
@@ -95,7 +95,7 @@ def detect_button(filePath):
             for icon_cnt in contours:
                 rect = cv2.boundingRect(icon_cnt)
                 icon_s = rect[2] * rect[3]
-                # cv2.drawContours(img, icon_cnt + np.array([x,y]), -1, (255, 0, 0), 1)
+                # cv2.drawContours(img, icon_cnt + np.array([x,y]), -1, (0, 255, 0), 1)
                 if icon_s / s > 0.05 and icon_s/s < 0.7:
                     if(icon_rect):
                         icon_rect = mergeRect(icon_rect, rect)
@@ -116,17 +116,21 @@ def detect_button(filePath):
                 if (icon_s / s > 0.1 and icon_s / s < 0.7 and \
                     icon_w / icon_h <= 4 and icon_w / icon_h >= 1/4):
                     icon_img = img[icon_y : icon_y + icon_h, icon_x : icon_x + icon_w]
+                    # print(img.shape)
                     
                     # cv2.imshow('test', icon_img)
-                    icon_type = classifyIcon.predict(icon_img, True)
+                    icon_type = classifyIcon.predict(icon_img)
 
                     cv2.drawContours(img, [cnt], -1, (0, 255, 0), 1)
                     putText(img, shape, (x + w/2, y - 5), 1)
                     putText(img, icon_type, (x + w/2, y + h + 15), 1)
-                    # cv2.rectangle(img, (icon_x, icon_y), (icon_x + icon_w, icon_y + icon_h), (255,0,255),1)
+                    cv2.rectangle(img, (icon_x, icon_y), (icon_x + icon_w, icon_y + icon_h), (255,0,255),1)
 
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    outPath = os.path.join(os.curdir, 'outputs', fileName)
+    dirPath = os.path.join(os.curdir, 'outputs')
+    outPath = os.path.join(dirPath, fileName)
+    if not os.path.exists(dirPath):
+        os.makedirs(dirPath)
     cv2.imwrite(outPath, img)
 
 
