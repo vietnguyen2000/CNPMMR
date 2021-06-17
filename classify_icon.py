@@ -30,25 +30,30 @@ class ClassifyIcon:
             default = min(icon.shape[0], icon.shape[1])
             quantized = icon
         
-        # remove noise
-        quantized = reduceColor(quantized, 128)
-        colors, counts = np.unique(quantized.reshape(-1,quantized.shape[2]), axis = 0, return_counts = True)
-        # print(colors, counts)
-        colors_percent = counts / np.sum(counts)
-
-        num_of_color = np.count_nonzero(colors_percent >= 0.1)
         
-        if (num_of_color == 3):
-            return 'Two tone'
-        if (num_of_color <= 1 or num_of_color > 3):
-            # print(num_of_color)
-            return 'Unknown'
+        currentValue = 128
+        while (True):
+            # remove noise
+            quantized_color = reduceColor(quantized, currentValue)
+            colors, counts = np.unique(quantized_color.reshape(-1,quantized_color.shape[2]), axis = 0, return_counts = True)
+            # print(colors, counts)
+            colors_percent = counts / np.sum(counts)
+
+            num_of_color = np.count_nonzero(colors_percent >= 0.1)
+            
+            if (num_of_color == 3):
+                return 'Two tone'
+            if (num_of_color <= 1 or num_of_color > 3):
+                currentValue /= 2
+                if currentValue > 30: continue
+                return 'Unknown'
+            break 
         
         max_counts = max(counts)
         max_index = np.where(counts == max_counts)[0][0]
         max_colors = colors[max_index] # background
 
-        data = np.apply_along_axis(lambda x: not self.compareColor(x, max_colors), -1, quantized)
+        data = np.apply_along_axis(lambda x: not self.compareColor(x, max_colors), -1, quantized_color)
         skel, distance = medial_axis(data, return_distance = True)
         
         thickness = np.max(distance) / default
